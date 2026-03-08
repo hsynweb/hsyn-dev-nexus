@@ -17,6 +17,20 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="site-body {{ $bodyClass ?? '' }}">
+        @if (session('status'))
+            <div class="flash-banner">
+                <div class="flash-banner__inner">{{ session('status') }}</div>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="flash-banner">
+                <div class="flash-banner__inner">
+                    {{ $errors->first() }}
+                </div>
+            </div>
+        @endif
+
         @yield('content')
     </body>
 </html>

@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Lead;
 use Illuminate\View\View;
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 
 class LandingPageController extends Controller
 {
@@ -76,61 +79,44 @@ class LandingPageController extends Controller
         ]);
     }
 
-    public function controlCenter(): View
+    public function storeLead(Request $request): RedirectResponse
     {
-        return view('preview.control-center', [
-            'serverStats' => [
-                ['label' => 'Aktif sunucu', 'value' => '12', 'delta' => '+2 yeni node'],
-                ['label' => 'Izlenen site', 'value' => '38', 'delta' => '4 riskli domain'],
-                ['label' => 'Kritik alarm', 'value' => '03', 'delta' => '1 disk, 2 servis'],
-                ['label' => 'Aylik tahsilat', 'value' => 'TL 184K', 'delta' => '%91 toplandi'],
-            ],
-            'deployments' => [
-                ['name' => 'api.hsyn.dev', 'host' => 'fra-core-01', 'status' => 'Canli', 'note' => 'Nginx + PHP-FPM saglikli'],
-                ['name' => 'musteri-paneli', 'host' => 'ist-app-02', 'status' => 'Inceleme', 'note' => 'Deploy sonrasi kuyruk gecikmesi var'],
-                ['name' => 'ticket-worker', 'host' => 'fra-jobs-01', 'status' => 'Risk', 'note' => 'Supervisor yeniden baslatilmali'],
-            ],
-            'finance' => [
-                ['client' => 'Arctis Studio', 'balance' => 'TL 18.400', 'state' => 'Gecikmis'],
-                ['client' => 'Mondeo Dental', 'balance' => 'TL 0', 'state' => 'Guncel'],
-                ['client' => 'Northline Hosting', 'balance' => 'TL 7.250', 'state' => 'Bildirim gonderildi'],
-            ],
-            'tickets' => [
-                ['subject' => 'Mail teslim problemi', 'priority' => 'Yuksek', 'owner' => 'Destek ekibi'],
-                ['subject' => 'Sunucu tasima talebi', 'priority' => 'Orta', 'owner' => 'Operasyon'],
-                ['subject' => 'Yeni e-ticaret kurulum onayi', 'priority' => 'Dusuk', 'owner' => 'Satis'],
-            ],
-            'serverTimeline' => [
-                ['time' => '09:10', 'event' => 'Agent fra-core-01 RAM kullanimi %81 bildirdi'],
-                ['time' => '09:18', 'event' => 'Ticket #412 odeme bekliyor durumuna cekildi'],
-                ['time' => '09:26', 'event' => 'Yeni musteri lead kaydi otomatik pipelinea akti'],
-                ['time' => '09:42', 'event' => 'Nginx servisi ist-app-02 uzerinde yeniden yuklendi'],
-            ],
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:40'],
+            'message' => ['required', 'string', 'max:5000'],
         ]);
+
+        Lead::create([
+            ...$validated,
+            'channel' => 'landing-contact',
+            'status' => 'new',
+            'score' => 'warm',
+        ]);
+
+        return redirect()
+            ->route('home')
+            ->with('status', 'Talebin kaydedildi. Bu lead admin paneline dustu.');
     }
 
-    public function clientHub(): View
+    public function dashboardRedirect(): RedirectResponse
     {
-        return view('preview.client-hub', [
-            'services' => [
-                ['name' => 'Yonetilen VPS', 'plan' => 'Business Managed', 'status' => 'Aktif'],
-                ['name' => 'Bakim + Guvenlik', 'plan' => 'Retainer', 'status' => 'Aktif'],
-                ['name' => 'Aylik Gelistirme Havuzu', 'plan' => '24 saat', 'status' => 'Yenileniyor'],
-            ],
-            'billing' => [
-                ['title' => 'Mart 2026 faturasi', 'amount' => 'TL 9.800', 'status' => 'Son 3 gun'],
-                ['title' => 'Odeme bildirimi', 'amount' => 'TL 4.200', 'status' => 'Onay bekliyor'],
-            ],
-            'projects' => [
-                ['name' => 'Yeni landing page', 'progress' => 'Tasarim onayi alindi'],
-                ['name' => 'CRM entegrasyonu', 'progress' => 'API baglantisi gelisiyor'],
-                ['name' => 'Sunucu sertlestirme', 'progress' => 'Test raporu hazirlaniyor'],
-            ],
-            'tickets' => [
-                ['subject' => 'SSL yenileme', 'status' => 'Cozuldu'],
-                ['subject' => 'Odeme dekont kontrolu', 'status' => 'Acik'],
-                ['subject' => 'Yeni domain yonlendirme', 'status' => 'Cevap bekleniyor'],
-            ],
-        ]);
+        $user = request()->user();
+
+        return $user && $user->isAdmin()
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('client.dashboard');
+    }
+
+    public function controlCenter(): RedirectResponse
+    {
+        return redirect()->route('admin.dashboard');
+    }
+
+    public function clientHub(): RedirectResponse
+    {
+        return redirect()->route('client.dashboard');
     }
 }

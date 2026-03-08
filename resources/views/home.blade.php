@@ -11,8 +11,13 @@
             <nav class="topbar-nav">
                 <a href="#modules">Moduller</a>
                 <a href="#roadmap">Roadmap</a>
-                <a href="{{ route('control-center') }}">Control Center</a>
-                <a href="{{ route('client-hub') }}">Client Hub</a>
+                <a href="#contact">Yeni is</a>
+                @auth
+                    <a href="{{ route('dashboard.redirect') }}">Panel</a>
+                @else
+                    <a href="{{ route('login') }}">Giris</a>
+                    <a href="{{ route('register') }}">Kayit</a>
+                @endauth
             </nav>
         </header>
 
@@ -22,14 +27,17 @@
                     <span class="eyebrow">HSYN DEV OPERATIONS SUITE</span>
                     <h1>Projeler, musteriler, tahsilat ve sunucular tek komuta yuzeyinde.</h1>
                     <p class="lede">
-                        HSYN Nexus; iletisim formundan gelen talebi, aktif hizmeti, borc bilgisini, ticket kaydini
-                        ve sunucu durumunu birbirinden kopuk ekranlardan alip tek ve premium bir operasyon diline
-                        cevirir.
+                        HSYN Nexus artik sadece vitrin degil. Public lead topluyor, musteri girisi veriyor, admin
+                        operasyonlarini yonetiyor ve agent endpointi ile sunucu heartbeat kabul ediyor.
                     </p>
 
                     <div class="cta-group">
-                        <a class="button button-primary" href="{{ route('control-center') }}">Admin preview</a>
-                        <a class="button button-secondary" href="{{ route('client-hub') }}">Musteri preview</a>
+                        @auth
+                            <a class="button button-primary" href="{{ route('dashboard.redirect') }}">Panele git</a>
+                        @else
+                            <a class="button button-primary" href="{{ route('register') }}">Musteri kayit</a>
+                            <a class="button button-secondary" href="{{ route('login') }}">Admin / musteri giris</a>
+                        @endauth
                     </div>
 
                     <div class="stat-grid">
@@ -43,9 +51,9 @@
                 </div>
 
                 <div class="hero-visual reveal">
-                    <div class="screen screen-glow">
+                    <div class="screen">
                         <div class="screen-header">
-                            <span class="chip">Mission Feed</span>
+                            <span class="chip">Live system</span>
                             <span class="screen-dotset">
                                 <i></i><i></i><i></i>
                             </span>
@@ -53,45 +61,42 @@
 
                         <div class="screen-layout">
                             <section class="screen-panel screen-panel--tall">
-                                <p class="screen-label">Ops radar</p>
+                                <p class="screen-label">What is live now</p>
                                 <div class="radar-grid">
-                                    <span>12 server</span>
-                                    <span>38 site</span>
-                                    <span>7 yeni is</span>
-                                    <span>3 kritik alarm</span>
+                                    <span>Public lead intake</span>
+                                    <span>Client auth</span>
+                                    <span>Admin workflows</span>
+                                    <span>Agent heartbeat</span>
                                 </div>
                             </section>
 
                             <section class="screen-panel">
-                                <p class="screen-label">Finance pulse</p>
-                                <div class="mini-bars">
-                                    <i style="height: 48%"></i>
-                                    <i style="height: 70%"></i>
-                                    <i style="height: 58%"></i>
-                                    <i style="height: 92%"></i>
-                                    <i style="height: 81%"></i>
-                                </div>
-                            </section>
-
-                            <section class="screen-panel">
-                                <p class="screen-label">Live queue</p>
+                                <p class="screen-label">Core routes</p>
                                 <ul class="list-tight">
-                                    <li>Lead skoru yukseliyor</li>
-                                    <li>Odeme bildirimi bekliyor</li>
-                                    <li>Deploy sonrasi health-check gecti</li>
+                                    <li>/admin</li>
+                                    <li>/portal</li>
+                                    <li>/api/agent/heartbeat</li>
+                                </ul>
+                            </section>
+
+                            <section class="screen-panel">
+                                <p class="screen-label">Demo accounts</p>
+                                <ul class="list-tight">
+                                    <li>admin@hsyn.dev</li>
+                                    <li>client@hsyn.dev</li>
                                 </ul>
                             </section>
                         </div>
                     </div>
 
                     <div class="floating-note floating-note--amber">
-                        <span class="eyebrow">New job intake</span>
-                        <strong>Iletisim formu -> lead -> teklif</strong>
+                        <span class="eyebrow">Agent install</span>
+                        <strong>`X-Agent-Token` ile heartbeat kabul eder</strong>
                     </div>
 
                     <div class="floating-note floating-note--teal">
-                        <span class="eyebrow">Infra watch</span>
-                        <strong>Tek agent ile sunucu ve siteler gorunur</strong>
+                        <span class="eyebrow">Lead flow</span>
+                        <strong>Form -> lead -> admin dashboard</strong>
                     </div>
                 </div>
             </section>
@@ -128,12 +133,9 @@
                 </div>
 
                 <div class="blueprint-card reveal">
-                    <span class="eyebrow">Design mood</span>
-                    <h3>Mission control + luxury industrial</h3>
-                    <p>
-                        Obsidian zemin, kum beji kontrastlar, bakir parlama ve petrol yesili vurgularla klasik hosting
-                        paneli gorunumunden cikiyoruz.
-                    </p>
+                    <span class="eyebrow">Ready to try</span>
+                    <h3>Yerelde acildiginda dogrudan denenebilir</h3>
+                    <p>Kayit ol, admin olarak gir, musteri olustur, fatura ekle, ticket ac, odeme bildirimi yolla ve agent heartbeat post et.</p>
                     <div class="palette-row">
                         <span class="palette-swatch swatch-obsidian"></span>
                         <span class="palette-swatch swatch-sand"></span>
@@ -146,7 +148,7 @@
             <section id="roadmap" class="section-card">
                 <div class="section-heading reveal">
                     <span class="eyebrow">Roadmap</span>
-                    <h2>Proje ilk gunden sonra hangi sirayla acilacak, burada sabit.</h2>
+                    <h2>Bu fazdan sonra auth var, veri akisi var, altyapi kapisi var.</h2>
                 </div>
 
                 <div class="phase-grid">
@@ -160,36 +162,39 @@
                 </div>
             </section>
 
-            <section class="section-card">
-                <div class="section-heading reveal">
-                    <span class="eyebrow">Workflows</span>
-                    <h2>Sistemin kalbi olan uc ana akis.</h2>
+            <section id="contact" class="section-card split-grid">
+                <div class="reveal">
+                    <div class="section-heading">
+                        <span class="eyebrow">New business intake</span>
+                        <h2>Yeni is talebini buradan dusur.</h2>
+                    </div>
+                    <p class="lede">Bu form admin panelinde lead olarak gorunur. Boylece public vitrin ile operasyon paneli ayni sistemde birlesir.</p>
                 </div>
 
-                <div class="workflow-grid">
-                    @foreach ($workflows as $workflow)
-                        <article class="workflow-card reveal">
-                            <h3>{{ $workflow['label'] }}</h3>
-                            <ol>
-                                @foreach ($workflow['items'] as $item)
-                                    <li>{{ $item }}</li>
-                                @endforeach
-                            </ol>
-                        </article>
-                    @endforeach
-                </div>
-            </section>
-
-            <section class="section-card final-cta reveal">
-                <div>
-                    <span class="eyebrow">Next move</span>
-                    <h2>Temel atildi. Bir sonraki turda auth, roller, CRUD ve agent endpointleri acilir.</h2>
-                </div>
-
-                <div class="cta-group">
-                    <a class="button button-primary" href="{{ route('control-center') }}">Admin deneyimi</a>
-                    <a class="button button-secondary" href="{{ route('client-hub') }}">Musteri deneyimi</a>
-                </div>
+                <form class="app-form reveal" method="POST" action="{{ route('lead.store') }}">
+                    @csrf
+                    <label>
+                        <span>Ad soyad</span>
+                        <input name="name" type="text" value="{{ old('name') }}" required>
+                    </label>
+                    <label>
+                        <span>Sirket</span>
+                        <input name="company_name" type="text" value="{{ old('company_name') }}">
+                    </label>
+                    <label>
+                        <span>E-posta</span>
+                        <input name="email" type="email" value="{{ old('email') }}" required>
+                    </label>
+                    <label>
+                        <span>Telefon</span>
+                        <input name="phone" type="text" value="{{ old('phone') }}">
+                    </label>
+                    <label class="span-2">
+                        <span>Talep detayi</span>
+                        <textarea name="message" rows="5" required>{{ old('message') }}</textarea>
+                    </label>
+                    <button class="button button-primary" type="submit">Lead olustur</button>
+                </form>
             </section>
         </main>
     </div>
