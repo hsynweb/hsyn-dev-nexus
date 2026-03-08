@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Lead;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -48,6 +49,39 @@ class AdminPortalTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => 'new-client@example.com',
             'role' => 'client',
+        ]);
+    }
+
+    public function test_admin_can_update_lead(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin',
+            'display_name' => 'Admin',
+            'email' => 'admin@example.com',
+            'role' => 'admin',
+            'password' => 'Password123!',
+        ]);
+
+        $lead = Lead::create([
+            'name' => 'Lead',
+            'email' => 'lead@example.com',
+            'channel' => 'landing-contact',
+            'status' => 'new',
+            'score' => 'warm',
+        ]);
+
+        $response = $this->actingAs($admin)->patch(route('admin.leads.update', $lead), [
+            'status' => 'qualified',
+            'score' => 'hot',
+            'owner_id' => $admin->id,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('leads', [
+            'id' => $lead->id,
+            'status' => 'qualified',
+            'score' => 'hot',
+            'owner_id' => $admin->id,
         ]);
     }
 }

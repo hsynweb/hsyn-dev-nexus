@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingPageController::class, 'index'])->name('home');
@@ -20,6 +21,7 @@ Route::middleware('guest')->group(function (): void {
 Route::middleware('auth')->group(function (): void {
     Route::get('/dashboard', [LandingPageController::class, 'dashboardRedirect'])->name('dashboard.redirect');
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+    Route::patch('/account', [ProfileController::class, 'update'])->name('account.update');
 
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/', [AdminPortalController::class, 'dashboard'])->name('dashboard');
@@ -30,6 +32,8 @@ Route::middleware('auth')->group(function (): void {
         Route::patch('/invoices/{invoice}', [AdminPortalController::class, 'updateInvoiceStatus'])->name('invoices.update');
         Route::post('/tickets', [AdminPortalController::class, 'storeTicket'])->name('tickets.store');
         Route::patch('/tickets/{ticket}', [AdminPortalController::class, 'updateTicketStatus'])->name('tickets.update');
+        Route::post('/tickets/{ticket}/reply', [AdminPortalController::class, 'replyTicket'])->name('tickets.reply');
+        Route::patch('/leads/{lead}', [AdminPortalController::class, 'updateLead'])->name('leads.update');
         Route::post('/servers', [AdminPortalController::class, 'storeServer'])->name('servers.store');
         Route::patch('/servers/{server}', [AdminPortalController::class, 'updateServerStatus'])->name('servers.update');
     });
@@ -38,6 +42,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/', [ClientPortalController::class, 'dashboard'])->name('dashboard');
         Route::post('/payment-notifications', [ClientPortalController::class, 'storePaymentNotification'])->name('payments.store');
         Route::post('/tickets', [ClientPortalController::class, 'storeTicket'])->name('tickets.store');
+        Route::post('/tickets/{ticket}/reply', [ClientPortalController::class, 'replyTicket'])->name('tickets.reply');
     });
 });
 

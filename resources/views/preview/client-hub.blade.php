@@ -42,6 +42,28 @@
                 <article class="dashboard-panel reveal is-visible">
                     <div class="panel-heading">
                         <div>
+                            <span class="eyebrow">Profile</span>
+                            <h2>Hesap ayarlari</h2>
+                        </div>
+                    </div>
+
+                    <form class="app-form compact-form" method="POST" action="{{ route('account.update') }}">
+                        @csrf
+                        @method('PATCH')
+                        <label><span>Ad</span><input name="name" type="text" value="{{ auth()->user()->name }}" required></label>
+                        <label><span>Gorunen ad</span><input name="display_name" type="text" value="{{ auth()->user()->display_name }}"></label>
+                        <label><span>Sirket</span><input name="company_name" type="text" value="{{ auth()->user()->company_name }}"></label>
+                        <label><span>Telefon</span><input name="phone" type="text" value="{{ auth()->user()->phone }}"></label>
+                        <label><span>Saat dilimi</span><input name="timezone" type="text" value="{{ auth()->user()->timezone }}"></label>
+                        <label><span>Yeni sifre</span><input name="password" type="password"></label>
+                        <label class="span-2"><span>Yeni sifre tekrar</span><input name="password_confirmation" type="password"></label>
+                        <button class="button button-primary" type="submit">Profili kaydet</button>
+                    </form>
+                </article>
+
+                <article class="dashboard-panel reveal is-visible">
+                    <div class="panel-heading">
+                        <div>
                             <span class="eyebrow">Active services</span>
                             <h2>Hizmetlerin</h2>
                         </div>
@@ -150,12 +172,24 @@
 
                     <div class="table-stack">
                         @foreach ($tickets as $ticket)
-                            <div class="table-row">
-                                <div>
+                            <div class="table-row table-row--stack">
+                                <div class="conversation-block">
                                     <strong>{{ $ticket->subject }}</strong>
                                     <span>{{ $ticket->status }} · {{ $ticket->priority }}</span>
+                                    <div class="message-stack">
+                                        @foreach ($ticket->messages->take(4) as $message)
+                                            <div class="message-bubble">
+                                                <strong>{{ $message->author?->name ?? 'Sistem' }}</strong>
+                                                <p>{{ $message->body }}</p>
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
-                                <div><strong>{{ optional($ticket->created_at)->format('d.m.Y') }}</strong></div>
+                                <form class="app-form compact-form single-column-form" method="POST" action="{{ route('client.tickets.reply', $ticket) }}">
+                                    @csrf
+                                    <textarea name="body" rows="3" placeholder="Yeni mesaj yaz" required></textarea>
+                                    <button class="button button-secondary" type="submit">Mesaj gonder</button>
+                                </form>
                             </div>
                         @endforeach
                     </div>

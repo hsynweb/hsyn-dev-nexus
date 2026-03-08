@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
+use App\Models\Lead;
+use App\Models\PaymentNotification;
 use App\Models\Project;
 use App\Models\Server;
 use App\Models\Service;
@@ -19,10 +21,12 @@ class AdminPortalController extends Controller
     public function dashboard(): View
     {
         $customers = User::query()->where('role', 'client')->latest()->get();
+        $leads = Lead::query()->with('owner')->latest()->get();
         $projects = Project::query()->with('customer')->latest()->get();
         $services = Service::query()->with(['customer', 'project'])->latest()->get();
         $invoices = Invoice::query()->with('customer')->latest()->get();
-        $tickets = Ticket::query()->with(['customer', 'service'])->latest()->get();
+        $paymentNotifications = PaymentNotification::query()->with(['customer', 'invoice'])->latest()->get();
+        $tickets = Ticket::query()->with(['customer', 'service', 'messages.author'])->latest()->get();
         $servers = Server::query()->with(['sites' => fn ($query) => $query->latest()->limit(4)])->latest()->get();
 
         return view('preview.control-center', [
@@ -34,6 +38,8 @@ class AdminPortalController extends Controller
             ],
             'deployments' => $servers,
             'finance' => $invoices,
+            'leads' => $leads,
+            'paymentNotifications' => $paymentNotifications,
             'tickets' => $tickets,
             'customers' => $customers,
             'projects' => $projects,
@@ -187,6 +193,19 @@ class AdminPortalController extends Controller
         return back()->with('status', 'Sunucu kaydi eklendi.');
     }
 
+    public function updateLead(Request $request, Lead $lead): RedirectResponse
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'string', 'max:50'],
+            'score' => ['required', 'string', 'max:50'],
+            'owner_id' => ['nullable', 'exists:users,id'],
+        ]);
+
+        $lead->update($validated);
+
+        return back()->with('status', 'Lead guncellendi.');
+    }
+
     public function updateInvoiceStatus(Request $request, Invoice $invoice): RedirectResponse
     {
         $validated = $request->validate([
@@ -216,6 +235,28 @@ class AdminPortalController extends Controller
         ]);
 
         return back()->with('status', 'Ticket durumu guncellendi.');
+    }
+
+    public function replyTicket(Request $request, Ticket $ticket): RedirectResponse
+    {
+        $validated = $request->validate([
+            'body' => ['required', 'string'],
+            'status' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $ticket->messages()->create([
+            'author_id' => $request->user()->id,
+            'visibility' => 'public',
+            'body' => $validated['body'],
+        ]);
+
+        $ticket->update([
+            'status' => $validated['status'] ?? 'pending',
+            'first_replied_at' => $ticket->first_replied_at ?? now(),
+            'resolved_at' => ($validated['status'] ?? null) === 'resolved' ? now() : $ticket->resolved_at,
+        ]);
+
+        return back()->with('status', 'Ticket yaniti eklendi.');
     }
 
     public function updateServerStatus(Request $request, Server $server): RedirectResponse

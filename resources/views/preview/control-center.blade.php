@@ -11,9 +11,12 @@
             <div class="sidebar-block">
                 <span class="eyebrow">Command deck</span>
                 <a class="sidebar-link is-active" href="{{ route('admin.dashboard') }}">Overview</a>
+                <a class="sidebar-link" href="#leads">Leadler</a>
                 <a class="sidebar-link" href="#customers">Musteriler</a>
                 <a class="sidebar-link" href="#billing">Faturalar</a>
+                <a class="sidebar-link" href="#payments">Odeme bildirimleri</a>
                 <a class="sidebar-link" href="#servers">Sunucular</a>
+                <a class="sidebar-link" href="#profile">Profil</a>
             </div>
 
             <div class="sidebar-block sidebar-block--status">
@@ -68,6 +71,45 @@
                             </li>
                         @endforeach
                     </ul>
+                </article>
+
+                <article class="dashboard-panel reveal is-visible" id="leads">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="eyebrow">Lead inbox</span>
+                            <h2>Lead havuzu</h2>
+                        </div>
+                    </div>
+
+                    <div class="table-stack">
+                        @foreach ($leads->take(6) as $lead)
+                            <div class="table-row table-row--stack">
+                                <div>
+                                    <strong>{{ $lead->name }}</strong>
+                                    <span>{{ $lead->company_name ?: $lead->email }} · {{ $lead->message }}</span>
+                                </div>
+                                <form class="inline-form" method="POST" action="{{ route('admin.leads.update', $lead) }}">
+                                    @csrf
+                                    @method('PATCH')
+                                    <select name="status">
+                                        @foreach (['new', 'contacted', 'qualified', 'won', 'lost'] as $status)
+                                            <option value="{{ $status }}" @selected($lead->status === $status)>{{ $status }}</option>
+                                        @endforeach
+                                    </select>
+                                    <select name="score">
+                                        @foreach (['cold', 'warm', 'hot'] as $score)
+                                            <option value="{{ $score }}" @selected($lead->score === $score)>{{ $score }}</option>
+                                        @endforeach
+                                    </select>
+                                    <select name="owner_id">
+                                        <option value="">Sahipsiz</option>
+                                        <option value="{{ auth()->id() }}" @selected($lead->owner_id === auth()->id())>{{ auth()->user()->name }}</option>
+                                    </select>
+                                    <button class="button button-secondary" type="submit">Guncelle</button>
+                                </form>
+                            </div>
+                        @endforeach
+                    </div>
                 </article>
 
                 <article class="dashboard-panel reveal is-visible" id="customers">
@@ -249,6 +291,27 @@
                     </div>
                 </article>
 
+                <article class="dashboard-panel reveal is-visible" id="payments">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="eyebrow">Payment notifications</span>
+                            <h2>Musteriden gelen bildirimler</h2>
+                        </div>
+                    </div>
+
+                    <div class="stack-list">
+                        @foreach ($paymentNotifications->take(6) as $notification)
+                            <li>
+                                <div>
+                                    <strong>{{ $notification->customer?->name }}</strong>
+                                    <span>{{ $notification->reference_code ?: 'Referans yok' }} · {{ $notification->status }}</span>
+                                </div>
+                                <strong>TL {{ number_format((float) $notification->amount, 2, ',', '.') }}</strong>
+                            </li>
+                        @endforeach
+                    </div>
+                </article>
+
                 <article class="dashboard-panel reveal is-visible">
                     <div class="panel-heading">
                         <div>
@@ -286,20 +349,40 @@
                     <div class="table-stack">
                         @foreach ($tickets->take(6) as $ticket)
                             <div class="table-row table-row--stack">
-                                <div>
+                                <div class="conversation-block">
                                     <strong>{{ $ticket->subject }}</strong>
-                                    <span>{{ $ticket->customer?->name }} · {{ $ticket->priority }}</span>
-                                </div>
-                                <form class="inline-form" method="POST" action="{{ route('admin.tickets.update', $ticket) }}">
-                                    @csrf
-                                    @method('PATCH')
-                                    <select name="status">
-                                        @foreach (['open', 'pending', 'resolved'] as $status)
-                                            <option value="{{ $status }}" @selected($ticket->status === $status)>{{ $status }}</option>
+                                    <span>{{ $ticket->customer?->name }} · {{ $ticket->priority }} · {{ $ticket->status }}</span>
+                                    <div class="message-stack">
+                                        @foreach ($ticket->messages->take(3) as $message)
+                                            <div class="message-bubble">
+                                                <strong>{{ $message->author?->name ?? 'Sistem' }}</strong>
+                                                <p>{{ $message->body }}</p>
+                                            </div>
                                         @endforeach
-                                    </select>
-                                    <button class="button button-secondary" type="submit">Durum</button>
-                                </form>
+                                    </div>
+                                </div>
+                                <div class="action-stack">
+                                    <form class="inline-form" method="POST" action="{{ route('admin.tickets.update', $ticket) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <select name="status">
+                                            @foreach (['open', 'pending', 'resolved'] as $status)
+                                                <option value="{{ $status }}" @selected($ticket->status === $status)>{{ $status }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button class="button button-secondary" type="submit">Durum</button>
+                                    </form>
+                                    <form class="app-form compact-form single-column-form" method="POST" action="{{ route('admin.tickets.reply', $ticket) }}">
+                                        @csrf
+                                        <textarea name="body" rows="3" placeholder="Musteriye yanit yaz" required></textarea>
+                                        <select name="status">
+                                            @foreach (['pending', 'resolved'] as $status)
+                                                <option value="{{ $status }}">{{ $status }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button class="button button-primary" type="submit">Yanitla</button>
+                                    </form>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -349,6 +432,28 @@
                             </div>
                         @endforeach
                     </div>
+                </article>
+
+                <article class="dashboard-panel reveal is-visible" id="profile">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="eyebrow">Profile</span>
+                            <h2>Hesap ayarlari</h2>
+                        </div>
+                    </div>
+
+                    <form class="app-form compact-form" method="POST" action="{{ route('account.update') }}">
+                        @csrf
+                        @method('PATCH')
+                        <label><span>Ad</span><input name="name" type="text" value="{{ auth()->user()->name }}" required></label>
+                        <label><span>Gorunen ad</span><input name="display_name" type="text" value="{{ auth()->user()->display_name }}"></label>
+                        <label><span>Sirket</span><input name="company_name" type="text" value="{{ auth()->user()->company_name }}"></label>
+                        <label><span>Telefon</span><input name="phone" type="text" value="{{ auth()->user()->phone }}"></label>
+                        <label><span>Saat dilimi</span><input name="timezone" type="text" value="{{ auth()->user()->timezone }}"></label>
+                        <label><span>Yeni sifre</span><input name="password" type="password"></label>
+                        <label class="span-2"><span>Yeni sifre tekrar</span><input name="password_confirmation" type="password"></label>
+                        <button class="button button-primary" type="submit">Profili kaydet</button>
+                    </form>
                 </article>
             </section>
         </main>

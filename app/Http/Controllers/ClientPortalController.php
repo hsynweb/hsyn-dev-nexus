@@ -19,7 +19,7 @@ class ClientPortalController extends Controller
         $services = $user->services()->latest()->get();
         $billing = $user->invoices()->latest()->get();
         $projects = $user->projects()->latest()->get();
-        $tickets = $user->tickets()->with('messages')->latest()->get();
+        $tickets = $user->tickets()->with('messages.author')->latest()->get();
         $paymentNotifications = $user->paymentNotifications()->latest()->get();
 
         return view('preview.client-hub', compact(
@@ -82,5 +82,27 @@ class ClientPortalController extends Controller
         ]);
 
         return back()->with('status', 'Destek talebi olusturuldu.');
+    }
+
+    public function replyTicket(Request $request, Ticket $ticket): RedirectResponse
+    {
+        abort_unless($ticket->customer_id === $request->user()->id, 403);
+
+        $validated = $request->validate([
+            'body' => ['required', 'string'],
+        ]);
+
+        TicketMessage::create([
+            'ticket_id' => $ticket->id,
+            'author_id' => $request->user()->id,
+            'visibility' => 'public',
+            'body' => $validated['body'],
+        ]);
+
+        $ticket->update([
+            'status' => 'open',
+        ]);
+
+        return back()->with('status', 'Ticket mesaji eklendi.');
     }
 }
